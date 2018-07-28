@@ -1,0 +1,60 @@
+<!-- 测试数据传输 -->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>1036225283</title>
+<script src="../../modules/jquery/jquery.min.js"></script>
+
+<script type="text/javascript" src="glMatrix-0.9.5.js"></script>
+</head>
+
+<body>
+	<canvas id="canvas" width="600" height="600"
+		style="border: 1px solid #aaa; display: block; margin: 50px auto;">
+        您的浏览器不支持canvas
+    </canvas>
+	<input type="button" value="load" onclick="load()">
+	<img id="img" alt="" src="">
+</body>
+<script type="text/javascript">
+
+	Xws = {};
+	
+	Xws.Util = {};
+
+	Xws.Util.float32ArrayToArray = function (float32Array) {
+    var array = new Array(float32Array.length);
+    var duck = "[";
+    for (var i = 0; i < float32Array.length; i++) {
+        duck = duck+float32Array[i]+",";
+    }
+    console.info(duck);
+	};
+	
+	Xws.Util.json = function (jsonString) {
+    return JSON.parse(jsonString);
+	};
+
+	function degToRad(degrees) {
+        return degrees * Math.PI / 180;
+    }
+	
+	$(document).ready(function(){
+	
+		var gl4 =  mat4.create();
+	 	mat4.identity(gl4);
+        //mat4.translate(gl4, [0, 0.0, -8.0]);
+		//mat4.rotateZ(gl4,degToRad(12))
+		mat4.rotateX(gl4,degToRad(12))
+		
+		$.post('rotate',{},function(data){
+			 var root = Xws.Util.json(data);
+    		 console.info(root.root.message);
+		});
+		
+		Xws.Util.float32ArrayToArray(gl4)
+		
+		
+	});
+</script>
+</html>

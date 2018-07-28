@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <base href="<%=basePath%>">
+
+    <title>My JSP 'vertex.jsp' starting page</title>
+
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="This is my page">
+    <!--
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        -->
+
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        div {
+            resize: both;
+            overflow: auto
+        }
+    </style>
+
+    <script type="text/javascript" src="../../modules/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../src/glMatrix-0.9.5.js"></script>
+    <script type="text/javascript" src="../src/util.js"></script>
+    <script type="text/javascript" src="../src/gl.core.js"></script>
+    <script type="text/javascript">
+        startup = function () {
+
+            var triangleVertex = [
+
+                0.0, 1.0, 0.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
+
+                // Right face
+                0.0, 1.0, 0.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0,
+
+                // Back face
+                0.0, 1.0, 0.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
+
+                // Left face
+                0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0
+
+            ];
+
+            var triangleColor = [1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0,
+                1.0, 1.0];
+
+            var triangleIndex = [0, 1, 2];
+
+            var triangleTextureCoord = [
+
+                0, 0, 1, 0, 0, 1,
+
+                0, 0, 1, 0, 0, 1,
+
+                0, 0, 1, 0, 0, 1,
+
+                0, 0, 1, 0, 0, 1];
+
+            //构建正方形
+            var squareVertex = [-1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1];
+            var squareIndex = [0, 1, 2, 0, 2, 3];
+            var squareTextureCoord = [0, 1, 0, 0, 1, 0, 1, 1];
+            /**
+             0,1,
+             0,0,
+             1,0,
+             1,1,
+             1,1,
+             1,0
+
+             */
+
+            webgl = $load('canvas');
+
+            //生成单位矩阵
+            var identity = new Matrix().identity();
+
+            /**
+             * 设置透视矩阵
+             */
+            var camera = new Camera(webgl).setPerspective(new Matrix()
+                    .perspective(45, 600 / 600, 0.3, 100).get());
+            //camera.setPerspective(identity.get());
+            camera.updateCamera();
+
+            var fly = new Three(webgl).setModelViewMatrix(identity.get())
+                    .setVertex(squareVertex).setIndex(squareIndex).setIndexSize(6)
+                    .setTextureCoord(squareTextureCoord).setColorAndTexture(2)
+                    .setDrawType(1).draw().loadImage("resource/images/posz.jpg");
+
+            var a = new Three(webgl).setModelViewMatrix(
+                    new Matrix().initTranslate([-2, 0, -6]).get())
+                    .setVertex(triangleVertex).setVertexSize(12).setTextureCoord(
+                            triangleTextureCoord).setTextureCoordSize(12)
+                    .setColorAndTexture(2).setDrawType(1).draw().loadImage(
+                            "resource/images/2013.jpg");
+
+            var b = new Three(webgl).setModelViewMatrix(
+                    new Matrix().initTranslate([-1, 0, -6]).get())
+                    .setVertex(triangleVertex).setVertexSize(12).setTextureCoord(
+                            triangleTextureCoord).setTextureCoordSize(12)
+                    .setColorAndTexture(2).setDrawType(1).draw().loadImage(
+                            "resource/images/2013.jpg");
+
+            var c = new Three(webgl).setModelViewMatrix(
+                    new Matrix().initTranslate([0, 0, -6]).get()).setVertex(
+                    triangleVertex).setVertexSize(12).setTextureCoord(
+                    triangleTextureCoord).setTextureCoordSize(12)
+                    .setColorAndTexture(2).setDrawType(1).draw().loadImage(
+                            "resource/images/2013.jpg");
+
+            var d = new Three(webgl).setModelViewMatrix(
+                    new Matrix().initTranslate([1, 0, -6]).get()).setVertex(
+                    triangleVertex).setVertexSize(12).setTextureCoord(
+                    triangleTextureCoord).setTextureCoordSize(12)
+                    .setColorAndTexture(2).setDrawType(1).draw().loadImage(
+                            "resource/images/2013.jpg");
+            var e = new Three(webgl).setModelViewMatrix(
+                    new Matrix().initTranslate([2, 0, -6]).get()).setVertex(
+                    triangleVertex).setVertexSize(12).setTextureCoord(
+                    triangleTextureCoord).setTextureCoordSize(12)
+                    .setColorAndTexture(2).setDrawType(1).draw().loadImage(
+                            "resource/images/2013.jpg");
+
+            setZ = function () {
+                webgl.setZ();
+            };
+
+            show = function () {
+                fly.draw();
+            };
+
+            clear2 = function () {
+                webgl.clear();
+            };
+            clearZ = function () {
+                webgl.clearZ();
+            };
+
+            show2 = function () {
+                fly.draw();
+            };
+
+            moveToUp = function () {
+                camera.moveToUp(0.01);
+                camera.updateCamera();
+                show2();
+            };
+            moveToDown = function () {
+                camera.moveToDown(0.01);
+                camera.updateCamera();
+                show2();
+            };
+            //向左，右移动
+            moveToLeft = function () {
+                camera.moveToLeft(0.2);
+                camera.updateCamera();
+                show2();
+            };
+            moveToRight = function () {
+                camera.moveToRight(0.2);
+                camera.updateCamera();
+                show2();
+            };
+            //向前，后移动
+            moveToBefore = function () {
+                camera.moveToBefore(0.001);
+                camera.updateCamera();
+                show2();
+            };
+            moveToAfter = function () {
+                camera.moveToAfter(0.001);
+                camera.updateCamera();
+                show2();
+            };
+            //向上，下旋转
+            rotateUp = function (value) {
+                camera.rotateUp(value);
+                camera.updateCamera();
+                show2();
+            };
+            rotateDown = function (value) {
+                camera.rotateDown(value);
+                camera.updateCamera();
+                show2();
+            };
+            //向左，右旋转
+            rotateLeft = function (value) {
+                camera.rotateLeft(value);
+                camera.updateCamera();
+                show2();
+            };
+            rotateRight = function (value) {
+                camera.rotateRight(value);
+                camera.updateCamera();
+                show2();
+            };
+
+
+            var initX, initY;
+            var resultX, resultY;
+            var duck = document.getElementById('canvas');
+            initX = duck.width / 2;
+            initY = duck.height / 2;
+            var mouse = document.getElementById('mouse');
+            var out = document.getElementById('out');
+            var enter = document.getElementById('enter');
+            var count = 0;
+            duck.onmousemove = function (e) {
+                resultX = e.layerX - initX;
+                resultY = e.layerY - initY;
+                rotateLeft(resultX / 5);
+                rotateDown(resultY / 5);
+                mouse.innerHTML = '鼠标移动' + (resultX) + "   " + (resultY);
+                count++;
+                enter.innerHTML = '总和' + (count);
+            };
+        };
+
+
+    </script>
+</head>
+
+
+<body onload="startup();">
+<canvas id="canvas" width="600" height="600"></canvas>
+<div style="float: right;">
+    <!-- 摄像机移动 -->
+    <table>
+        <tr>
+            <td><input type='button' value='向上' onclick='moveToUp()'/></td>
+            <td><input type='button' value='向下' onclick='moveToDown()'/>
+            </td>
+        </tr>
+        <tr>
+            <td><input type='button' value='向左' onclick='moveToLeft()'/>
+            </td>
+            <td><input type='button' value='向右' onclick='moveToRight()'/>
+            </td>
+        </tr>
+        <tr>
+            <td><input type='button' value='向前' onclick='moveToBefore()'/>
+            </td>
+            <td><input type='button' value='向后' onclick='moveToAfter()'/>
+            </td>
+        </tr>
+    </table>
+    <!-- 摄像机旋转 -->
+    <table>
+        <tr>
+            <td></td>
+            <td><input type='button' value='向上旋转' onclick='rotateUp()'/>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><input type='button' value='向左旋转' onclick='rotateLeft()'/>
+            </td>
+            <td></td>
+            <td><input type='button' value='向右旋转' onclick='rotateRight()'/>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type='button' value='向下旋转' onclick='rotateDown()'/>
+            </td>
+            <td></td>
+        </tr>
+    </table>
+    <!-- 输出鼠标位置 -->
+    <div id="mouse">ddd</div>
+    <!-- 输出鼠标进入事件坐标 -->
+    <div id="enter">dd</div>
+    <!-- 输出鼠标出来事件坐标 -->
+    <div id="out">dd</div>
+</div>
+<image src='resource/images/2013.jpg' id='myTexture'/>
+
+<input type='button' value='显示' onclick='show()'/>
+<input type='button' value='缓存测试' onclick='setZ()'/>
+<input type='button' value='清除缓存' onclick='clearZ()'/>
+<input type='button' value='清除画布' onclick='clear2()'/>
+
+
+</body>
+
+</html>

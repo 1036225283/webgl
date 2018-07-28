@@ -1,0 +1,335 @@
+<!DOCTYPE HTML>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <title>index</title>
+
+    <meta charset="UTF-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="This is my page">
+    <meta>
+
+
+    <script type="text/javascript" src="../../webgl/src/WebSocket.js"></script>
+    <script type="text/javascript" src="../../modules/jquery/jquery.min.js"></script>
+    <link href="../../modules/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
+    <link href="../../modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script type="text/javascript" src="../../modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../modules/vue/vue.js"></script>
+
+
+    <script type="text/javascript" src="../../modules/jquery/jquery.min.js"></script>
+
+    <!--
+    找WebGL的工作,5年java工程师，转WebGL
+    技能：java那些，javascript那些
+    知识：微积分，线性代，概论统计略知一二，数据结构，算法，设计模式略懂，
+    邮箱：id512@126.com
+    手机：13521307203
+    介绍：本页面由原生webGl开发，主要js模块如下
+    -->
+    <script type="text/javascript" src="../../webgl/src/glMatrix-0.9.5.js"></script>
+    <script type="text/javascript" src="../../webgl/src/util.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.core.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.matrix.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.util.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.global.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.triangle.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.line.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.point.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.event.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.func.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.useful.js"></script>
+    <script type="text/javascript" src="../../webgl/src/gl.test.js"></script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+
+	attribute vec4 attrVertexColor;
+	varying vec4 varColor;
+
+	attribute vec2 attrTextureCoordinates;
+	varying vec2 varTextureCoordinates;
+
+	uniform mat4 mMatrix;
+    uniform mat4 vMatrix;
+    uniform mat4 pMatrix;
+
+	void main(){
+		gl_Position =    pMatrix * vMatrix * vec4(aVertexPosition, 1.0);
+		gl_PointSize = 1.0;
+		varColor = attrVertexColor;
+		varTextureCoordinates = attrTextureCoordinates;
+		//varTextureCoordinates = vec2((aVertexPosition.x+1.0)/2.0, (aVertexPosition.y+1.0)/2.0);
+	}
+    </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+	varying vec2 varTextureCoordinates;
+	uniform sampler2D uSampler;
+	varying vec4 varColor;
+
+	uniform int uColorAndTexture;
+
+	void main(){
+
+	    if(uColorAndTexture==0){
+	        gl_FragColor = vec4(0, 0, 0, 1.0);
+	    } else if(uColorAndTexture==1){
+	        gl_FragColor = varColor;
+	    } else {
+	        gl_FragColor = texture2D(uSampler, varTextureCoordinates);
+	    }
+
+	}
+    </script>
+    <script type="text/javascript">
+
+
+        startup = function () {
+            webgl = $load('canvas');
+            webgl.updateViewMatrix(mat4GlobalViewMatrix.get());
+
+            webgl.updateViewMatrix(mat4GlobalViewMatrix.uniformScale(0.09).get());
+            var pMatrix = mat4.create();
+            mat4.perspective(60, 600 / 600, 0.005, 100, pMatrix);
+//            webgl.updatePerspectiveMatrix(new Matrix().identity().perspective(60, 600/600, 0.003, 200).get());
+            webgl.updatePerspectiveMatrix(new Matrix().identity().get());
+//            webgl.updatePerspectiveMatrix(pMatrix);
+//
+            webgl.cullFace(false);
+            webgl.depthTest(true);
+
+            l = new Line(webgl);
+            p = new Point(webgl);
+            oGlobalPoint = p;
+
+            t = new Triangle(webgl);
+            xws.set("debug", false);
+
+
+            gl.global.sphere = new gl.useful.Sphere();
+            gl.global.sphere.create();
+            gl.global.sphere.setColor();
+            gl.global.sphere.setTexture("myTexture");
+            array = xws.selected();
+            gl.global.cylinder = new gl.useful.Cylinder();
+            gl.global.cylinder.create();
+            gl.global.cylinder.setColor();
+            gl.global.cylinder.setTexture("myTexture");
+
+            gl.global.rectangle = new gl.useful.Rectangle();
+            gl.global.rectangle.create();
+            gl.global.rectangle.setColor();
+            gl.global.rectangle.setTexture("myTexture");
+
+            gl.global.disk = new gl.useful.Disk();
+            gl.global.disk.create();
+            gl.global.disk.setColor();
+            gl.global.disk.setTexture("myTexture");
+            gl.global.three = gl.global.rectangle;
+
+            gl.global.showType = "A";
+            show = function () {
+
+//                gl.test.testVertexEnable(t);
+                if (gl.global.showType == "A") {
+                    gl.global.three.showPoint();
+                } else if (gl.global.showType == "B") {
+                    gl.global.three.showLine();
+                } else if (gl.global.showType == "C") {
+                    gl.global.three.showTriangle();
+                }
+
+//                test.testLineTwo(l);
+//                test.testTriangleTexture(t);
+
+//                test.testPoint(p);
+
+
+//                cylinder.showPoint();
+//                cylinder.showLine();
+//                cylinder.showTriangle("myTexture");
+//                sphere.showPoint();
+//                gl.global.sphere.showLine();
+//                gl.global.sphere.showTriangle();
+
+//                rectangle.showPoint();
+//                rectangle.showLine();
+//                rectangle.showTriangle("myTexture");
+//                disk.showPoint();
+//                disk.showLine();
+//                disk.showTriangle("myTexture");
+//                    gl.test.testTriangleTexture(t);
+//                f2xadd3();
+//                docker(sinx);
+//                docker(xy);
+//                docker(sinx_xy)
+//                docker(mb)
+
+            };
+
+            show();
+
+            updateView = function () {
+                show();
+            }
+
+        };
+
+        //设置显示类型：点阵 线框 贴图
+        function showType(strType) {
+            gl.global.showType = strType;
+            show();
+        }
+
+        //遮挡剔除
+        function cullFace(self) {
+            if (self.checked) {
+                webgl.cullFace(true);
+            } else {
+                webgl.cullFace(false);
+            }
+            show();
+        }
+
+        //深度测试
+        function depthTest(self) {
+            if (self.checked) {
+                webgl.depthTest(true);
+            } else {
+                webgl.depthTest(false);
+            }
+            show();
+        }
+
+    </script>
+</head>
+
+<body onload="startup()">
+<div class="container-fluid">
+    <div class="row">
+        <div class="span12">
+            <div class="container">
+                <div class="row">
+
+
+                    <div class="col-sm-4">
+                        <h1 class="page-header">
+                            列表
+                        </h1>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">点线面</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-success" onclick="showType('A')">点阵</button>
+                                    <button type="button" class="btn btn-info" onclick="showType('B')">线框</button>
+                                    <button type="button" class="btn btn-warning" onclick="showType('C')">贴图</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">其他操作</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="btn-group">
+                                    <form class="form-horizontal" role="form">
+                                        <div class="form-group">
+
+                                            <div class="checkbox" style="padding-top: 10px">
+                                                <label>
+                                                    <input type="checkbox" onclick="depthTest(this)">深度测试
+                                                </label>
+                                            </div>
+
+                                            <div class="checkbox" style="margin-top: 10px">
+                                                <label>
+                                                    <input type="checkbox" onclick="cullFace(this)">遮挡测试
+                                                </label>
+                                            </div>
+
+                                        </div>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="table table-bordered table-hover" id="id_list">
+                            <caption>信息如下</caption>
+                            <thead>
+                            <tr>
+                                <th>名称</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="a in arr" v-on:click="clickRow(a)">
+                                <td>{{a}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="col-sm-8">
+                        <h1 class="page-header" id="title_kline">
+                            webgl视图
+                        </h1>
+
+
+                        <div class="col-sm-12">
+                            <canvas id="canvas" width="600" height="600" onmousemove="mouseMove(event)"
+                                    class=""></canvas>
+                            <img src="../../webgl/images/2013.jpg" id='myTexture' style="display: none"/>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+
+<script>
+    //vue部分
+
+    var list = new Vue({
+        el: '#id_list',
+        data: {
+            arr: ["矩形", "圆形", "圆柱", "球形"],
+            strCode: ''
+        },
+        methods: {
+            load: function (data) {
+                this.stocks = data;
+            },
+            setCode: function (code) {
+                this.strCode = code
+            },
+            clickRow: function (strName) {
+                if (strName == "矩形") {
+                    gl.global.three = gl.global.rectangle;
+                } else if (strName == "圆形") {
+                    gl.global.three = gl.global.disk;
+                } else if (strName == "圆柱") {
+                    gl.global.three = gl.global.cylinder;
+                } else if (strName == "球形") {
+                    gl.global.three = gl.global.sphere;
+                }
+                show();
+            }
+        }
+    });
+</script>
+
+</html>

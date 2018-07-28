@@ -1,0 +1,139 @@
+﻿<html>
+<head><title>WebGL摄像机操作 www.web-tinker.com</title>
+</head>
+<body>
+<canvas height="400" width="400" id="canvas">
+    <script type="text/plain" id="vs_s">
+attribute vec3 po;
+attribute vec2 mp;
+uniform mat4 pos;
+uniform mat4 pro;
+varying vec2 mp_v;
+void main(){
+  mp_v=mp;
+  gl_Position=pro*pos*vec4(po,1.0);
+}
+
+
+
+
+    </script>
+    <script type="text/plain" id="fs_s">
+precision lowp float;
+uniform vec3 amb;
+uniform sampler2D tex;
+varying vec2 mp_v;
+void main(){
+  gl_FragColor=texture2D(tex,mp_v)+vec4(amb,1.0);
+}
+
+
+
+
+    </script>
+    <script>
+        /*准备*/
+        var webgl, program, shader, vs, fs, i, j, k, dat;
+        webgl = canvas.getContext("webgl");
+        program = webgl.createProgram();
+        vs = webgl.createShader(webgl.VERTEX_SHADER);
+        fs = webgl.createShader(webgl.FRAGMENT_SHADER);
+        webgl.shaderSource(vs, vs_s.textContent);
+        webgl.shaderSource(fs, fs_s.textContent);
+        webgl.compileShader(vs);
+        webgl.compileShader(fs);
+        webgl.attachShader(program, vs);
+        webgl.attachShader(program, fs);
+        webgl.linkProgram(program);
+        webgl.useProgram(program);
+
+        /*顶点属性相关*/
+        var po, mp;
+        po = webgl.getAttribLocation(program, "po");
+        mp = webgl.getAttribLocation(program, "mp");
+        webgl.enableVertexAttribArray(po);
+        webgl.enableVertexAttribArray(mp);
+        webgl.bindBuffer(webgl.ARRAY_BUFFER, webgl.createBuffer());
+        i = 8, k = 12
+        webgl.bufferData(
+                webgl.ARRAY_BUFFER, new Float32Array([
+                    -i, -1, -1, -i, -1, -k, i, -1, -1, i, -1, -1, -i, -1, -k, i, -1, -k
+                ]), webgl.STATIC_DRAW
+        );
+        webgl.vertexAttribPointer(po, 3, webgl.FLOAT, false, 0, 0);
+        webgl.bindBuffer(webgl.ARRAY_BUFFER, webgl.createBuffer());
+        k = 32;
+        webgl.bufferData(
+                webgl.ARRAY_BUFFER, new Float32Array([
+                    0, 0, 0, k, k, 0, k, 0, 0, k, k, k
+                ]), webgl.STATIC_DRAW
+        );
+        webgl.vertexAttribPointer(mp, 2, webgl.FLOAT, false, 0, 0);
+
+        /*全局属性相关*/
+        var pro, tex, pos;
+        tex = webgl.getUniformLocation(program, "tex");
+        pro = webgl.getUniformLocation(program, "pro");
+        pos = webgl.getUniformLocation(program, "pos");
+        webgl.uniformMatrix4fv(pro, false, [
+            1.7, 0, 0, 0, 0, 1.7, 0, 0, 0, 0, -1, -1, 0, 0, -2, 0
+        ]);//投射矩阵
+        webgl.uniform1i(tex, 0);
+
+        /*贴图相关*/
+        var texture;
+        texture = webgl.createTexture();
+        webgl.activeTexture(webgl.TEXTURE0);
+        webgl.bindTexture(webgl.TEXTURE_2D, texture);
+        dat = [];
+        for (i = 0; i < 32; i++)for (j = 0; j < 32; j++)
+            k = i &lt; 16 ^ j &lt; 16 ? 0xCC : 0x66, dat.push(k, k, k);
+        webgl.texImage2D(
+                webgl.TEXTURE_2D, 0, webgl.RGB, 32, 32, 0, webgl.RGB,
+                webgl.UNSIGNED_BYTE, new Uint8Array(dat)
+        );
+        webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+
+        /*摄像机对象化*/
+        var camera = {
+            rot: 0, x: 0, y: 0, z: 0, move: function (e) {
+                //移动时需要做朝向计算
+                this.x += Math.sin(-this.rot) * e;
+                this.z += Math.cos(-this.rot) * e;
+            }, toMatrix: function () {
+                var s = Math.sin(this.rot), c = Math.cos(this.rot), x = this.x, z = this.z;
+                //先平移，后旋转
+                return [
+                    c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0,
+                    c * x + s * z, this.y, c * z - s * x, 1
+                ];
+            }
+        };
+
+        /*绘制相关*/
+        setInterval(function () {
+            //计算按键对摄像机的影响
+            if (KEYS[LEFT])camera.rot -= 0.02;
+            if (KEYS[RIGHT])camera.rot += 0.02;
+            if (KEYS[UP])camera.move(0.05);
+            if (KEYS[DOWN])camera.move(-0.05);
+            //把矩阵放入着色器
+            webgl.uniformMatrix4fv(pos, false, camera.toMatrix());
+            //绘制
+            webgl.drawArrays(webgl.TRIANGLES, 0, 6);
+        }, 16);
+
+        /*操作相关*/
+        var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40, KEYS = {};
+        //在KEYS中储存按键状态
+        document.onkeydown = function (e) {
+            KEYS[e.keyCode] = true
+        };
+        document.onkeyup = function (e) {
+            KEYS[e.keyCode] = false
+        };
+
+    </script>
+</canvas>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!-- 研究html元素进行3d翻转的 -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Bootstrap 模板</title>
+<script type="text/javascript" src="glMatrix-0.9.5.js"></script>
+<style type="text/css">
+.duck{
+background-color: blue;
+height: 90px;
+}
+</style>
+</head>
+<body onload="startup()">
+	<canvas id="canvas" width="300" height="300">
+    </canvas>
+	<input type="button" value="load" onclick="load()">
+	<img id="img" alt="" src="">
+	
+	<div class="duck" id="aa">aaaaaaaaaaa
+	<br>
+	bbbbbbbbbb
+	<br>
+	cccccccccccc
+	<br>
+	eeeeeeeeeee
+	</div>
+	<div id="bb">bb</div>
+	<div class="duck" id="cc">cc</div>
+	<div id="dd">dd</div>
+	<div class="duck" id="ee">ee</div>
+	
+</body>
+
+<script type="text/javascript">
+Xws = {};
+	
+	Xws.Util = {};
+
+	Xws.Util.float32ArrayToArray = function (float32Array) {
+    var array = new Array(float32Array.length);
+    var duck = "";
+    for (var i = 0; i < float32Array.length; i++) {
+        duck = duck+float32Array[i]+",";
+    }
+    console.info(duck.substring(0,duck.length-1));
+    return duck.substring(0,duck.length-1);
+	};
+
+window.requestAnimFrame = (function() {
+	return window.requestAnimationFrame || window.webkitRequestAnimationFrame
+			|| window.mozRequestAnimationFrame || window.oRequestAnimationFrame
+			|| window.msRequestAnimationFrame || function(callback, element) {
+				window.setTimeout(callback, 1000 / 60);
+			};
+})();
+
+
+function degToRad(degrees) {
+        return degrees * Math.PI / 180;
+    }
+
+startup = function(){
+	var aa = document.getElementById("aa");
+	var bb = document.getElementById("bb");
+	var cc = document.getElementById("cc");
+	var dd = document.getElementById("dd");
+	var ee = document.getElementById("ee");
+    
+
+	var angle = 1;
+
+	var gl4 = mat4.create();
+	
+	mat4.identity(gl4);
+	mat4.translate(gl4, [0, 10, 0]);
+	
+	var count = 0.000001;
+	
+	aaa = function(){
+		
+		angle = angle +count;
+		mat4.rotateX(gl4,degToRad(angle));
+		var m = "matrix3d("+Xws.Util.float32ArrayToArray(gl4)+")";
+		aa.style.transform=m;
+		
+		
+		angle = angle +count;
+		mat4.rotateX(gl4,degToRad(angle));
+		var m = "matrix3d("+Xws.Util.float32ArrayToArray(gl4)+")";
+		bb.style.transform=m;
+		
+		angle = angle +count;
+		mat4.rotateX(gl4,degToRad(angle));
+		var m = "matrix3d("+Xws.Util.float32ArrayToArray(gl4)+")";
+		cc.style.transform=m;
+		
+		angle = angle +count;
+		mat4.rotateX(gl4,degToRad(angle));
+		var m = "matrix3d("+Xws.Util.float32ArrayToArray(gl4)+")";
+		dd.style.transform=m;
+		
+		angle = angle +count;
+		mat4.rotateX(gl4,degToRad(angle));
+		var m = "matrix3d("+Xws.Util.float32ArrayToArray(gl4)+")";
+		ee.style.transform=m;
+		
+		if(angle>4){
+			angle=1;
+		}
+		
+		
+		requestAnimFrame(aaa);
+		console.info(angle)
+	}
+	aaa();
+	
+}
+</script>
+</html>

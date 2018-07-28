@@ -1,0 +1,209 @@
+﻿<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=gb2312">
+    <script type="text/javascript" src="src/glMatrix-0.9.5.js"></script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+attribute vec3 v3Position;
+uniform mat4 um4Rotate;
+uniform mat4 um4Rotates;
+
+attribute vec2 aTexture;
+varying vec2 v_texCoord;
+
+
+void main(void)
+{
+    vec4 v4pos =  um4Rotate * vec4(v3Position, 1.0);
+    //v_texCoord = aTexture;//vec2((v4pos.x+1.0)/2.0, 1.0-(v4pos.y+1.0)/2.0);
+    gl_Position = v4pos;
+    v_texCoord = vec2((v3Position.x+1.0)/2.0, 1.0-(v3Position.y+1.0)/2.0);
+    //gl_Position = um4Rotate * vec4(v3Position, 1.0);
+}
+</script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+#else
+    precision mediump float;
+#endif
+uniform sampler2D s_texture;
+varying vec2 v_texCoord;
+
+void main(void)
+{
+    gl_FragColor = texture2D(s_texture, v_texCoord);
+}
+</script>
+
+<script>
+function ShaderSourceFromScript(scriptID)
+{
+    var shaderScript = document.getElementById(scriptID);
+    if (shaderScript == null) return "";
+
+    var sourceCode = "";
+    var child = shaderScript.firstChild;
+    while (child)
+    {
+        if (child.nodeType == child.TEXT_NODE ) sourceCode += child.textContent;
+        child = child.nextSibling;
+    }
+
+    return sourceCode;
+}
+
+var webgl = null;
+var vertexShaderObject = null;
+var fragmentShaderObject = null;
+var programObject = null;
+var triangleBuffer = null; 
+var textureBuffer = null;
+var v3PositionIndex = 0;
+var textureObject = null;
+var samplerIndex = -1;
+var interval = 300;
+var angle = 0;
+var um4RotateIndex = -1;
+var aTextureIndex = 11;
+
+function LoadData()
+{
+    var jsArrayData = [
+			0,0.2,0,//0
+			1,0.2,0,//1
+			0,1,0,//2
+			0,1,0,//3
+			0,1,0,//4
+			1,-0.2,0,//a
+			1,-0.2,0,//偶数
+			0,-0.2,0,//b
+			0,-1,0//c
+
+			]
+
+    triangleBuffer = webgl.createBuffer();
+    webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer);
+    webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW);
+	
+	
+	var jsTextureArray = [
+		0,0,
+		1,0,
+		0,1,
+		
+		0,0,
+		1,0,
+		0,1,
+		
+		0,0,
+		1,0,
+		0,1
+	]
+	
+	textureBuffer = webgl.createBuffer();
+    webgl.bindBuffer(webgl.ARRAY_BUFFER, textureBuffer);
+    webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsTextureArray), webgl.STATIC_DRAW);
+	
+	
+    textureObject = webgl.createTexture();
+    webgl.bindTexture(webgl.TEXTURE_2D, textureObject);
+    var img = document.getElementById('myTexture');
+    webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, img);
+ 
+	webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+
+    //gl.activeTexture(gl.TEXTURE0);
+    //gl.bindTexture(gl.TEXTURE_2D, textureObject);
+    //gl.uniform1i(samplerIndex, 0);
+ 
+ //缓冲数据
+	webgl.bindBuffer(webgl.ARRAY_BUFFER, textureBuffer); 
+    webgl.enableVertexAttribArray(aTextureIndex); 
+    webgl.vertexAttribPointer(aTextureIndex, 2, webgl.FLOAT, false, 0, 0);
+ 
+    return 0;
+}
+
+function RenderScene()
+{
+    webgl.clearColor(0.0, 0.0, 0.0, 1.0);
+    webgl.clear(webgl.COLOR_BUFFER_BIT);
+
+    webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer); 
+    webgl.enableVertexAttribArray(v3PositionIndex); 
+    webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 0, 0);
+	
+	
+
+   
+ 
+    var m4Rotate = mat4.create();
+    mat4.identity(m4Rotate);
+	mat4.scale(m4Rotate,[0.8,0.8,0.8])
+    //mat4.rotateZ(m4Rotate, angle*Math.PI/180);
+	//mat4.rotateX(m4Rotate, angle*Math.PI/180);
+    webgl.uniformMatrix4fv(um4RotateIndex, false, m4Rotate);
+
+    webgl.drawArrays(webgl.TRIANGLE_STRIP, 0, 9);
+}
+
+function RotateTriangle()
+{
+ angle += 10;
+ if(angle >= 360) angle -= 360;
+ 
+ RenderScene();
+}
+
+function Init()
+{
+    var myCanvasObject = document.getElementById('myCanvas');
+    webgl = myCanvasObject.getContext("experimental-webgl");
+
+    webgl.viewport(0, 0, myCanvasObject.clientWidth, myCanvasObject.clientHeight);
+
+    vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
+    fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+    webgl.shaderSource(vertexShaderObject, ShaderSourceFromScript("shader-vs"));
+    webgl.shaderSource(fragmentShaderObject, ShaderSourceFromScript("shader-fs"));
+
+    webgl.compileShader(vertexShaderObject);
+    webgl.compileShader(fragmentShaderObject);
+
+    if(!webgl.getShaderParameter(vertexShaderObject, webgl.COMPILE_STATUS)){alert(webgl.getShaderInfoLog(vertexShaderObject));return;}
+    if(!webgl.getShaderParameter(fragmentShaderObject, webgl.COMPILE_STATUS)){alert(webgl.getShaderInfoLog(fragmentShaderObject));return;}
+
+    programObject = webgl.createProgram();
+
+    webgl.attachShader(programObject, vertexShaderObject);
+    webgl.attachShader(programObject, fragmentShaderObject);
+
+    webgl.bindAttribLocation(programObject, v3PositionIndex, "v3Position");
+	webgl.bindAttribLocation(programObject, aTextureIndex, "aTexture");
+
+    webgl.linkProgram(programObject);
+    if(!webgl.getProgramParameter(programObject, webgl.LINK_STATUS)){alert(webgl.getProgramInfoLog(programObject));return;}
+
+    samplerIndex = webgl.getUniformLocation(programObject, "s_texture");
+    um4RotateIndex = webgl.getUniformLocation(programObject, "um4Rotate");
+	
+    webgl.useProgram(programObject);
+
+    if(LoadData() != 0){alert("error:LoadData()!");return;}
+
+
+    window.setInterval("RotateTriangle()", interval);
+}
+</script>
+</head>
+<body onload='Init()'>
+<canvas id="myCanvas" style="border:1px solid red;" width='600px' height='450px'></canvas>
+<img id="myTexture" src='images/2013.jpg'>
+</body>
+</html>

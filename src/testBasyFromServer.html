@@ -1,0 +1,125 @@
+<!-- 测试从后端读取贝赛尔曲线数据 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>1036225283</title>
+    <script type="text/javascript" src="../resource/canvas/Animate.js"></script>
+
+    <link href="../resource/bootstrap/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link rel="stylesheet"
+          href="../resource/bootstrap/css/bootstrap-theme.min.css">
+    <script src="../resource/jquery/jquery-2.1.1.min.js"></script>
+    <script src="../resource/bootstrap/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="../resource/webgl/glMatrix-0.9.5.js"></script>
+    <script type="text/javascript" src="../resource/canvas/canvas.js"></script>
+
+
+</head>
+
+<body>
+<canvas id="canvas" width="600" height="600"
+        style="border: 1px solid #aaa; display: block; margin: 50px auto;">
+    canvas
+</canvas>
+<input type="button" value="load" onclick="load()">
+<img id="img" alt="" src="">
+</body>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var ctx = new Canvas("canvas");
+        new Xws.RoundSquare(ctx.getContext()).init(100, 100, 20).initStyle().initPath().draw();
+        $.post("bezier", {}, function (data) {
+            var root = Xws.Util.json(data);
+            new Xws.Lines(ctx.getContext()).initPath(root).initStyle().draw().draw1();
+            console.info(root);
+        });
+
+
+    });
+
+    //测试后端矩阵处理数据
+    function testMatScale() {
+
+        $.post("../mat3/scale", {"x": 1, "y": 1}, function (data) {
+            var root = Xws.Util.json(data);
+            console.info(root.root.message);
+            var m = mat3.create();
+            mat3.identity(m);
+            mat3.scale(m, [1, 1, 1]);
+            var ss = Xws.Util.float32ArrayToString(m);
+            console.info(ss);
+        });
+    }
+
+
+    function test0() {
+
+        var ani = null;
+        var c = null;
+        var ball2 = null;
+        startup = function () {
+            c = new Canvas("canvas");
+            var cache = new Canvas("cache");
+//        new Arc(c.getContext()).init(100,100).draw();
+
+//        new Xws.Nine(c.getContext()).initPoint().initStyle().initImageStyle().draw();
+            var a1 = new Xws.RoundSquare(c.getContext()).initStyle().initXy(0, 0, 150, 100, 10).initPath().draw();
+            new Arc(c.getContext()).init(200, 200).draw();
+            var a2 = new Xws.RoundSquare(c.getContext()).initStyle().initXy(100, 100, 100, 100, 10).initPath().draw();
+            var a3 = new Xws.RoundSquare(c.getContext()).initStyle().initXy(100, 310, 370, 250, 10).initPath().draw();
+            a3.initFont().drawString(0, 40).drawBorderString(0, 80);
+
+            var balls = new Xws.Ball(cache.getContext()).init(500, 100, 10, -0.01, 0.02, "#223344").initPath().initStyle().draw();
+            ball2 = new Xws.Ball(cache.getContext()).init(400, 100, 20, -1, -1.9, "#223344").initPath().initStyle();
+
+            var show = new Xws.Cache().init(c, cache);
+
+            ball2.initImage();
+
+
+            function animate() {
+                var cxt = cache.getContext();
+                cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height);
+                ball2.update(1);
+                show.update();
+                requestAnimationFrame(animate);
+            }
+
+            requestAnimationFrame(animate);
+
+//    ani = new Xws.Animate().init(
+//    function(){
+//    var cxt = cache.getContext();
+//    cxt.clearRect(0,0,cxt.canvas.width,cxt.canvas.height);
+//    balls.update(ani.getRate());
+//    ball2.update(ani.getRate());
+//    show.update();
+//    }).start();
+
+
+        };
+
+        function convertCanvasToImage(canvas) {
+//        var image = new Image();
+            var image = document.getElementById("img");
+            image.src = canvas.toDataURL("image/png");
+            return image;
+        }
+
+        function load() {
+//    if(ani.id==null){
+//    ani.start();
+//    }else{
+//    ani.stop();
+//    }
+
+            ball2.translate();
+        }
+
+
+    }
+
+</script>
+</html>

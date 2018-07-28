@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>xws</title>
+
+    <script type="text/javascript" src="../src/WebSocket.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../modules/bootstrap/dist/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" type="text/css" href="../../modules/bootstrap/dist/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="../../modules/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../../modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+
+    <script type="text/javascript">
+        var wss = new WSocket("ws://127.0.0.1:8080/webSocket");
+
+        function callback(evt) {
+            var received_msg = evt.data;
+            console.info("接受的数据：" + received_msg)
+        }
+
+        wss.init(function () {
+            login();
+        }, callback);
+
+        function login() {
+            //获取输入内容，发送给后端
+            var input = $('#input').val();
+            var map = {};
+            map.strUser = "1036225286";
+            map.strPass = "xws";
+            map.strAction = "strLogin";
+            map.strData = input;
+            var strJson = JSON.stringify(map);
+            console.info("发送的数据：" + strJson);
+            wss.send(strJson)
+        }
+
+    </script>
+
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Hello, world!</h1>
+    <div class="row">
+    <textarea id="input" class="form-control" rows="3">
+
+    </textarea>
+        <br>
+        <button class="btn btn-default" onclick="login()">发送数据</button>
+    </div>
+</div>
+</body>
+</html>

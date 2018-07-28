@@ -1,0 +1,203 @@
+<!-- 灯光demo -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+    <title>My JSP 'vertex.jsp' starting page</title>
+
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="This is my page">
+
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        div {
+            resize: both;
+            overflow: auto
+        }
+    </style>
+
+    <script type="text/javascript" src="../../modules/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../src/glMatrix-0.9.5.js"></script>
+    <script type="text/javascript" src="../src/util.js"></script>
+    <script type="text/javascript" src="../src/gl.core.js"></script>
+
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;//顶点
+	attribute vec4 aVertexColor;//颜色
+	varying vec4 vColor;//颜色传递变量
+	
+	attribute vec2 aTextureCoord;//纹理
+	varying vec2 vTextureCoord;//纹理传递变量
+
+  	attribute vec3 aVertexNormal;
+  	uniform vec3 uLightPosition;
+  	uniform vec3 uAmbientLightColor;
+ 	uniform vec3 uDiffuseLightColor;
+  	uniform vec3 uSpecularLightColor;
+	varying vec3 vLightWeighting;
+
+	uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+	
+
+
+	void main(){
+
+		 // Get the vertex position in eye coordinates
+    vec4 vertexPositionEye4 = uMVMatrix * vec4(aVertexPosition, 1.0);
+    vec3 vertexPositionEye3 = vertexPositionEye4.xyz / vertexPositionEye4.w;
+  
+    // Calculate the vector (l) to the light source
+    vec3 vectorToLightSource = normalize(uLightPosition - vertexPositionEye3);
+    
+    // Transform the normal (n) to eye coordinates
+    vec3 normalEye = normalize(uNMatrix * aVertexNormal);
+    
+    // Calculate n dot l for diffuse lighting
+    float diffuseLightWeightning = max(dot(normalEye, 
+                                       vectorToLightSource), 0.0);
+                                       
+    // Calculate the reflection vector (r) that is needed for specular light
+    vec3 reflectionVector = normalize(reflect(-vectorToLightSource, 
+                                               normalEye));
+    
+    // The camera in eye coordinates is located in the origin and is pointing
+    // along the negative z-axis. Calculate viewVector (v) 
+    // in eye coordinates as:
+    // (0.0, 0.0, 0.0) - vertexPositionEye3
+    vec3 viewVectorEye = -normalize(vertexPositionEye3);
+    
+    float rdotv = max(dot(reflectionVector, viewVectorEye), 0.0);
+    
+    float specularLightWeightning = pow(rdotv, shininess);
+
+    // Sum up all three reflection components and send to the fragment shader
+    vLightWeighting = uAmbientLightColor + 
+                      uDiffuseLightColor * diffuseLightWeightning +
+                      uSpecularLightColor * specularLightWeightning;
+    
+		gl_Position =  uMVMatrix * vec4(aVertexPosition, 1.0);
+		gl_PointSize = 3.0;
+		vTextureCoord = aTextureCoord;
+		vColor = aVertexColor;
+	}
+
+
+
+    </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+	varying vec2 vTextureCoord;
+	uniform sampler2D uSampler;
+	varying vec4 vColor;
+	varying vec3 vLightWeighting;
+	uniform int uColorAndTexture;
+	void main(){
+		if(uColorAndTexture==1){
+			gl_FragColor = vColor;
+		}else if(uColorAndTexture==2){
+			gl_FragColor = texture2D(uSampler, vTextureCoord);
+		}else if(uColorAndTexture==3){
+			gl_FragColor = vColor*texture2D(uSampler, vTextureCoord);
+		}else if(uColorAndTexture==4){
+			gl_FragColor = vec4(vLightWeighting.rgb, 1.0);
+		}
+	}
+
+
+
+    </script>
+    <script type="text/javascript">
+        startup = function () {
+            var vertex = [0.0, 0.0, 0.0];
+
+            var triangleVertex = [0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0];
+
+            var triangleColor = [1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0,
+                1.0, 1.0];
+
+            var triangleIndex = [0, 1, 2];
+
+            var triangleTextureCoord = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0];
+
+            webgl = $load('canvas');
+            webgl.setVertexShaderSource(getShaderSourceByScript('shader-vs'));
+            webgl.setFragmentShaderSource(getShaderSourceByScript('shader-fs'));
+            webgl.loadShader().linkShader();
+
+            var world = new Matrix().translate([0, 0, -8]);
+            //生成单位矩阵
+            var identity = new Matrix().identity();
+
+            var t = new Three(webgl).setModelViewMatrix(identity.get()).setVertex(
+                    vertex).setVertexSize(1).setDrawType(7).draw();
+
+            var s = new Three(webgl).setModelViewMatrix(identity.get()).setVertex(
+                    triangleVertex).setVertexSize(3).setIndex(triangleIndex)
+                    .setIndexSize(3).setColor(triangleColor).setColorSize(3)
+                    .setTextureCoord(triangleTextureCoord).setTextureCoordSize(3)
+                    .setColorAndTexture(2).setDrawType(1).draw().loadImage(
+                            "../images/2013.jpg");
+            //生产顶点数据存储列表
+            var list = new Util.List();
+            list.add(0.9);
+            list.add(0);
+            list.add(0);
+
+            //生成等比缩放矩阵
+            var uniformScale = new Matrix().initUniformScale(0.8);
+            //生成旋转矩阵
+            var rotatem = new Matrix().initRotateZ(6);
+            //生成平移矩阵
+            var translatem = new Matrix().initTranslate([0.7, 0, 0]);
+            //旋转
+            rotate = function () {
+                var array = new Array(list.get(list.size() - 3), list.get(list
+                                .size() - 2), list.get(list.size() - 1));
+                rotatem.vmul(array);
+                list.add(array[0]);
+                list.add(array[1]);
+                list.add(array[2]);
+                t.setVertex(list.getArray()).setVertexSize(list.size() / 3).clear()
+                        .draw();
+            };
+            //缩放
+            scale = function () {
+                uniformScale.vmul(list.getArray());
+                t.setVertex(list.getArray()).setVertexSize(list.size() / 3).clear()
+                        .draw();
+            };
+            //平移
+            translate = function () {
+                translatem.vmul(list.getArray());
+                t.setVertex(list.getArray()).setVertexSize(list.size() / 3).clear()
+                        .draw();
+            };
+
+            show = function () {
+                list.show();
+            };
+
+        };
+    </script>
+</head>
+
+
+<body onload="startup();">
+<canvas id="canvas" width="600" height="600"></canvas>
+<img src="../images/2013.jpg" id='myTexture'/>
+<input type='button' value='旋转' onclick='rotate()'/>
+<input type='button' value='缩放' onclick='scale()'/>
+<input type='button' value='平移' onclick='translate()'/>
+<input type='button' value='展示' onclick='show()'/>
+</body>
+
+</html>

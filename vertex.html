@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>无标题文档</title>
+<style type="text/css">
+	*{ margin:0; padding:0}
+	div{resize:both;overflow:auto}
+	
+</style>
+	<script type="text/javascript" src="src/glMatrix-0.9.5.js"></script>
+	<script type="text/javascript" src="src/gl.matrix.js"></script>
+	<script type="text/javascript" src="src/util.js"></script>
+<script type="text/javascript" src="js/canvas.js"></script>
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	
+	attribute vec4 aVertexColor;
+	varying vec4 vColor;
+	
+	attribute vec2 aTexture;
+	varying vec2 vTexture;
+	
+	uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+	
+	void main(){
+		gl_Position =  uMVMatrix * vec4(aVertexPosition, 1.0);
+		gl_PointSize = 3.0;
+	}
+</script>
+<script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+	
+	varying vec2 vTexture;
+	uniform sampler2D uSampler;
+	
+	void main(){
+		gl_FragColor = vec4(1.0, 0.1, 1.0, 1.0);
+	}
+</script>
+<script type="text/javascript">
+
+	
+	startup = function(){
+	
+	
+	var vertex = new Vertex([
+			0.0,  0.0,  0.0
+	],1);
+	
+	webgl = $load('canvas');
+	webgl.setVertexShaderSource(getShaderSourceByScript('shader-vs'));
+	webgl.setFragmentShaderSource(getShaderSourceByScript('shader-fs'));
+	webgl.loadShader().linkShader();
+		
+	var world = new Matrix().translate([0,0,-8]);
+	//生成单位矩阵
+	var identity = new Matrix().identity();
+		
+	var t = new WebglObject(webgl).setModelViewMatrix(identity.get()).setVertexObject(vertex).setDrawType(7).draw();
+	
+	
+	//生产顶点数据存储列表
+	var list = new Util.List();
+	list.add(0.9);
+	list.add(0);
+	list.add(0)
+	
+	//生成等比缩放矩阵
+	var uniformScale = new Matrix().initUniformScale(0.8);
+	//生成旋转矩阵
+//	var rotatem = new Matrix().initRotateZ(6);
+	var rotatem = new Matrix().identity().rotateY(10);
+	//生成平移矩阵
+	var translatem = new Matrix().initTranslate([0.7,0.7,0.7]);
+	//旋转
+	rotate = function(){
+		var array = new Array(list.get(list.size()-3),list.get(list.size()-2),list.get(list.size()-1));
+		rotatem.vmul(array);
+		list.add(array[0]);
+		list.add(array[1]);
+		list.add(array[2]);
+		vertex.setVertex(list.getArray());
+		vertex.setNumberOfItems(list.size()/3);
+		t.setVertexObject(vertex).clear().draw();
+	}
+	//缩放
+	scale = function(){
+		uniformScale.vmul(list.getArray());
+		vertex.setVertex(list.getArray());
+		vertex.setNumberOfItems(list.size()/3);
+		t.setVertexObject(vertex).clear().draw();
+	}
+	//平移
+	translate = function(){
+		translatem.vmul(list.getArray());
+		vertex.setVertex(list.getArray());
+		vertex.setNumberOfItems(list.size()/3);
+		t.setVertexObject(vertex).clear().draw();
+	}
+	
+	show = function(){
+		list.show()
+	}
+		
+	}
+	</script>
+</head>
+
+<body onload="startup();">
+	<canvas id="canvas" width="400" height="400"></canvas>
+	<img src="images/2013.jpg" alt="" id="myTexture"/>
+	<input type='button' value = '旋转' onclick = 'rotate()'/>
+	<input type='button' value = '缩放' onclick = 'scale()'/>
+	<input type='button' value = '平移' onclick = 'translate()'/>
+	<input type='button' value = '展示' onclick = 'show()'/>
+</body>
+<script type="text/javascript">
+	
+</script>
+
+<!--矩阵操作-->
+<div></div>
+</html>
